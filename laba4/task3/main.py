@@ -1,5 +1,8 @@
-from first import ln, log10, log_osn
-from second import summ, sq, stepen
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from my_package import ln, log10, log_osn, summ, sq, stepen
 import math
 
 def m():
