@@ -1,238 +1,188 @@
-"""
-Лабораторная работа №7. Работа с классами ч.3
-Система управления сотрудниками с множественным наследованием
-"""
+class Employee:  # Класс с общими атрибутами для сотрудников
+    def __init__(self, name, id, salary):
+        self.name = name
+        self.id = id
+        self.salary = salary
+        self._active = True  # Частная переменная для статуса сотрудника
 
-# 1. Базовый класс Employee
-class Employee:
-    """
-    Базовый класс для всех сотрудников.
-    Демонстрирует инкапсуляцию через свойства (property).
-    """
-    def __init__(self, name: str, emp_id: str):
-        # Инкапсуляция: атрибуты защищены (private)
-        self._name = name
-        self._emp_id = emp_id
-    
-    # Геттеры для доступа к защищенным атрибутам
-    @property
-    def name(self):
-        return self._name
-    
-    @property
-    def emp_id(self):
-        return self._emp_id
-    
-    def get_info(self) -> str:
-        """Возвращает базовую информацию о сотруднике (полиморфизм)"""
-        return f"Сотрудник: {self._name}, ID: {self._emp_id}"
-    
-    def work(self) -> str:
-        """Абстрактный метод для демонстрации полиморфизма"""
-        return f"{self._name} выполняет свою работу."
+    def get_info(self):
+        return f"ID: {self.id}, Имя: {self.name}, Зарплата: {self.salary}"
+
+    def get_role(self):
+        return self.__class__.__name__
+
+    def activate(self):
+        self._active = True
+
+    def deactivate(self):
+        self._active = False
+
+    def status(self):
+        return "Сотрудник активен" if self._active else "Сотрудник неактивен"
+
+    def calculate_salary(self):
+        return self.salary
 
 
-# 2. Класс Manager
 class Manager(Employee):
-    """
-    Класс менеджера. Наследуется от Employee.
-    Добавляет управленческие функции.
-    """
-    def __init__(self, name: str, emp_id: str, department: str):
-        # Вызываем конструктор родительского класса
-        super().__init__(name, emp_id)
-        # Инкапсуляция: защищенный атрибут
-        self._department = department
-        # Приватный список подчиненных
-        self.__subordinates = []
-    
-    @property
-    def department(self):
-        return self._department
-    
-    def manage_project(self, project_name: str) -> str:
-        """Метод для управления проектами"""
-        return f"Менеджер {self.name} управляет проектом '{project_name}' в отделе {self._department}"
-    
-    def work(self) -> str:
-        """Переопределение метода work (полиморфизм)"""
-        return f"{self.name} руководит отделом {self._department}"
-    
-    def get_info(self) -> str:
-        """Расширение метода get_info"""
-        base_info = super().get_info()
-        return f"{base_info}, Должность: Менеджер, Отдел: {self._department}"
+    def __init__(self, name, id, salary, department, projects=None, team=None):
+        super().__init__(name, id, salary)
+        self.department = department
+        self.projects = projects if projects is not None else []
+        self.team = team if team is not None else []
 
+    def manage_project(self, project_name):
+        self.projects.append(project_name)
+        return f"Проект '{project_name}' добавлен в отдел {self.department}"
 
-# 3. Класс Technician
-class Technician(Employee):
-    """
-    Класс технического специалиста. Наследуется от Employee.
-    Добавляет технические навыки.
-    """
-    def __init__(self, name: str, emp_id: str, specialization: str):
-        super().__init__(name, emp_id)
-        self._specialization = specialization
-    
-    @property
-    def specialization(self):
-        return self._specialization
-    
-    def perform_maintenance(self) -> str:
-        """Метод для выполнения технического обслуживания"""
-        return f"Техник {self.name} выполняет обслуживание в области {self._specialization}"
-    
-    def work(self) -> str:
-        """Переопределение метода work (полиморфизм)"""
-        return f"{self.name} работает над технической задачей в области {self._specialization}"
-    
-    def get_info(self) -> str:
-        """Расширение метода get_info"""
-        base_info = super().get_info()
-        return f"{base_info}, Должность: Техник, Специализация: {self._specialization}"
+    def add_to_team(self, employee):
+        self.team.append(employee)
+        return f"Сотрудник {employee.name} добавлен в команду менеджера {self.name}"
 
-
-# 4. Класс TechManager (множественное наследование)
-class TechManager(Manager, Technician):
-    """
-    Класс технического менеджера.
-    Наследуется от Manager и Technician (множественное наследование).
-    Комбинирует управленческие и технические навыки.
-    """
-    def __init__(self, name: str, emp_id: str, department: str, specialization: str):
-        # Используем MRO (Method Resolution Order) для правильного вызова конструкторов
-        # Вызываем конструктор Manager (первый в списке наследования)
-        Manager.__init__(self, name, emp_id, department)
-        # Инициализируем атрибуты Technician
-        self._specialization = specialization
-    
-    # 5. Метод для добавления сотрудников
-    def add_employee(self, employee: Employee) -> None:
-        """Добавляет сотрудника в список подчиненных"""
-        if employee not in self._Manager__subordinates:  # Доступ к приватному атрибуту
-            self._Manager__subordinates.append(employee)
-            print(f"{employee.name} добавлен в команду {self.name}")
+    def remove_from_team(self, employee):
+        if employee in self.team:
+            self.team.remove(employee)
+            return f"Сотрудник {employee.name} уволен из команды менеджера {self.name}"
         else:
-            print(f"{employee.name} уже в команде {self.name}")
-    
-    # 6. Метод для получения информации о команде
-    def get_team_info(self) -> str:
-        """Возвращает информацию о всех подчиненных"""
-        if not self._Manager__subordinates:
-            return f"У {self.name} нет подчиненных"
-        
-        team_info = [f"Команда {self.name} ({len(self._Manager__subordinates)} чел.):"]
-        for i, emp in enumerate(self._Manager__subordinates, 1):
-            team_info.append(f"{i}. {emp.get_info()}")
-        return "\n".join(team_info)
-    
-    def work(self) -> str:
-        """Переопределение метода work для TechManager"""
-        return f"{self.name} совмещает управление отделом {self.department} и техническую работу в области {self.specialization}"
-    
-    def get_info(self) -> str:
-        """Переопределение метода get_info"""
-        return f"{super().get_info()}, Специализация: {self.specialization}"
-    
-    def manage_and_maintain(self, project_name: str) -> str:
-        """Уникальный метод TechManager - совмещает управление и техническую работу"""
-        manage_msg = self.manage_project(project_name)
-        tech_msg = self.perform_maintenance()
-        return f"{manage_msg}\n{tech_msg}"
+            return f"Сотрудник {employee.name} не найден в команде {self.name}"
+
+    def get_team_info(self):
+        if not self.team:
+            return "Команда пуста"
+        return "\n".join(emp.get_info() for emp in self.team)
+
+    def calculate_salary(self):
+        return self.salary * 1.2  # пример управленческой надбавки
 
 
-# Демонстрация функциональности
-def main():
-    print("=" * 60)
-    print("ДЕМОНСТРАЦИЯ СИСТЕМЫ УПРАВЛЕНИЯ СОТРУДНИКАМИ")
-    print("=" * 60)
-    
-    # Создание объектов разных классов
-    print("\n1. СОЗДАНИЕ СОТРУДНИКОВ:")
-    print("-" * 40)
-    
-    # Базовый сотрудник
-    emp1 = Employee("Иван Иванов", "EMP001")
-    print(emp1.get_info())
-    
-    # Менеджер
-    manager1 = Manager("Анна Петрова", "MGR001", "Разработка")
-    print(manager1.get_info())
-    
-    # Техник
-    tech1 = Technician("Петр Сидоров", "TECH001", "Сетевое оборудование")
-    print(tech1.get_info())
-    
-    # Технический менеджер (множественное наследование)
-    tech_manager = TechManager(
-        "Сергей Козлов", 
-        "TM001", 
-        "ИТ-инфраструктура", 
-        "Системное администрирование"
-    )
-    print(tech_manager.get_info())
-    
-    # 7. Демонстрация полиморфизма
-    print("\n2. ДЕМОНСТРАЦИЯ ПОЛИМОРФИЗМА (метод work()):")
-    print("-" * 40)
-    
-    employees = [emp1, manager1, tech1, tech_manager]
-    for emp in employees:
-        print(f"• {emp.work()}")
-    
-    # Демонстрация уникальных методов
-    print("\n3. УНИКАЛЬНЫЕ МЕТОДЫ КЛАССОВ:")
-    print("-" * 40)
-    
-    print(f"• {manager1.manage_project('Внедрение CRM')}")
-    print(f"• {tech1.perform_maintenance()}")
-    print(f"• {tech_manager.manage_and_maintain('Обновление серверов')}")
-    
-    # Работа с подчиненными
-    print("\n4. УПРАВЛЕНИЕ КОМАНДОЙ:")
-    print("-" * 40)
-    
-    # Добавление сотрудников в команду tech_manager
-    tech_manager.add_employee(manager1)
-    tech_manager.add_employee(tech1)
-    tech_manager.add_employee(emp1)
-    
-    # Попытка добавить уже существующего сотрудника
-    tech_manager.add_employee(tech1)
-    
-    # Вывод информации о команде
-    print("\n" + tech_manager.get_team_info())
-    
-    # Проверка MRO (Method Resolution Order)
-    print("\n5. ПОРЯДОК РАЗРЕШЕНИЯ МЕТОДОВ (MRO):")
-    print("-" * 40)
-    print("Порядок наследования для TechManager:")
-    for i, cls in enumerate(TechManager.__mro__, 1):
-        print(f"{i}. {cls.__name__}")
-    
-    # Демонстрация инкапсуляции
-    print("\n6. ДЕМОНСТРАЦИЯ ИНКАПСУЛЯЦИИ:")
-    print("-" * 40)
-    print(f"Доступ через свойства (property): {tech_manager.name}")
-    print(f"Доступ к отделу: {tech_manager.department}")
-    print(f"Доступ к специализации: {tech_manager.specialization}")
-    
-    # Прямой доступ к защищенным атрибутам (не рекомендуется, но возможен)
-    print(f"\nПрямой доступ к защищенным атрибутам (не рекомендуется):")
-    print(f"Защищенный атрибут _name: {tech_manager._name}")
-    
-    # Попытка доступа к приватному атрибуту
-    print(f"\nПопытка доступа к приватному атрибуту __subordinates:")
-    try:
-        print(tech_manager.__subordinates)
-    except AttributeError as e:
-        print(f"Ошибка: {e}")
-        print("Это демонстрирует инкапсуляцию - приватные атрибуты недоступны извне")
-    
-    print("\n" + "=" * 60)
-    print("ДЕМОНСТРАЦИЯ ЗАВЕРШЕНА")
-    print("=" * 60)
+class Technician(Employee):
+    def __init__(self, name, id, salary, specialization, certifications=None):
+        super().__init__(name, id, salary)
+        self.specialization = specialization
+        self.certifications = certifications if certifications is not None else []
+
+    def perform_maintenance(self):
+        return f"{self.name} выполняет техническое обслуживание ({self.specialization})"
+
+    def add_certification(self, cert):
+        self.certifications.append(cert)
+        return f"Сертификат '{cert}' добавлен для {self.name}"
+
+    def calculate_salary(self):
+        return self.salary * 1.1  # пример технической надбавки
+
+
+class TechManager(Manager, Technician):
+    def __init__(self, name, id, salary, department, specialization,
+                 projects=None, team=None, technical_projects=None):
+        # Явно инициализируем базовые поля от Employee
+        Employee.__init__(self, name, id, salary)
+        # затем задаём специфичные поля
+        self.department = department
+        self.specialization = specialization
+        self.projects = projects if projects is not None else []
+        self.team = team if team is not None else []
+        self.technical_projects = technical_projects if technical_projects is not None else []
+
+    def manage_project(self, project_name):
+        self.projects.append(project_name)
+        return f"Технический менеджер {self.name} добавил проект '{project_name}' в отдел {self.department}"
+
+    def perform_maintenance(self):
+        return f"{self.name} (TechManager) выполняет техническое обслуживание ({self.specialization})"
+
+    def assign_task(self, employee, task):
+        task.assign(employee)
+        return f"Задача '{task.title}' назначена сотруднику {employee.name} менеджером {self.name}"
+
+    def calculate_salary(self):
+        return self.salary * 1.35  # комбинированная надбавка
+
+
+class Task:
+    def __init__(self, title, description):
+        self.title = title
+        self.description = description
+        self.assigned_to = None
+        self.status = "Создана"  # Создана / Назначена / В работе / Выполнена
+
+    def assign(self, employee):
+        self.assigned_to = employee
+        self.status = "Назначена"
+
+    def start(self):
+        if self.assigned_to is not None:
+            self.status = "В работе"
+
+    def complete(self):
+        self.status = "Выполнена"
+
+    def __str__(self):
+        assigned = self.assigned_to.name if self.assigned_to else "Не назначена"
+        return f"Задача: {self.title} | Описание: {self.description} | Выполнитель: {assigned} | Статус: {self.status}"
+
+
+class EmployeeRegistry:
+    def __init__(self):
+        self.employees = {}
+
+    def add_employee(self, employee):
+        self.employees[employee.id] = employee
+
+    def remove_employee(self, employee_id):
+        return self.employees.pop(employee_id, None)
+
+    def get_employee(self, employee_id):
+        return self.employees.get(employee_id)
+
+    def get_all_employees(self):
+        return list(self.employees.values())
+
+    def get_employees_by_role(self, role_name):
+        return [emp for emp in self.employees.values() if emp.__class__.__name__ == role_name]
 
 
 if __name__ == "__main__":
-    main()
+    # Примеры использования (демонстрация)
+    registry = EmployeeRegistry()
+
+    emp1 = Employee("Иван", 1, 50000)
+    emp2 = Employee("Мария", 2, 52000)
+
+    manager = Manager("Анна", 3, 70000, "IT")
+    tech = Technician("Сергей", 4, 60000, "Сети")
+    tech_mgr = TechManager("Ольга", 5, 90000, "Разработка", "Backend")
+
+    registry.add_employee(emp1)
+    registry.add_employee(emp2)
+    registry.add_employee(manager)
+    registry.add_employee(tech)
+    registry.add_employee(tech_mgr)
+
+    print(manager.add_to_team(emp1))
+    print(manager.add_to_team(emp2))
+    print("Команда менеджера Анна:")
+    print(manager.get_team_info())
+    print()
+
+    print(manager.manage_project("CRM система"))
+    print(tech.perform_maintenance())
+    print(tech.add_certification("Cisco CCNA"))
+    print()
+
+    task = Task("Настройка сервера", "Установить и настроить Nginx")
+    print(tech_mgr.assign_task(tech, task))
+    print(task)
+    task.start()
+    print("После старта:", task)
+    task.complete()
+    print("После завершения:", task)
+    print()
+
+    # Полиморфизм: разные calculate_salary для разных ролей
+    print("--- Зарплаты ---")
+    for emp in registry.get_all_employees():
+        print(f"{emp.name} ({emp.get_role()}): {emp.calculate_salary()}")
+
+        
+    
