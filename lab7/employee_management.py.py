@@ -56,133 +56,105 @@ class Manager(Employee):
 
 
 class Technician(Employee):
-    def __init__(self, name, id, salary, specialization, certifications=None):
+    def __init__(self, name, id, salary, spezialization, sertifications=None):
         super().__init__(name, id, salary)
-        self.specialization = specialization
-        self.certifications = certifications if certifications is not None else []
-
+        self.spezialization = spezialization
+        self.sertifications = sertifications if sertifications is not None else []
+    
     def perform_maintenance(self):
-        return f"{self.name} выполняет техническое обслуживание ({self.specialization})"
+        return f"{self.name} Выполняет техническое обслуживание в обслати {self.spezialization}"
 
-    def add_certification(self, cert):
-        self.certifications.append(cert)
-        return f"Сертификат '{cert}' добавлен для {self.name}"
-
+    def add_sertifications(self, sert):
+        self.sertifications.append(sert)
+    
     def calculate_salary(self):
-        return self.salary * 1.1  # пример технической надбавки
+        return self.salary * 1.1
 
 
 class TechManager(Manager, Technician):
-    def __init__(self, name, id, salary, department, specialization,
-                 projects=None, team=None, technical_projects=None):
-        # Явно инициализируем базовые поля от Employee
-        Employee.__init__(self, name, id, salary)
-        # затем задаём специфичные поля
+    def __init__(self, name, id, salary, department, spezializaion, technical_projects=None):
+        # Вызываем инициализацию Employee
+        super().__init__(name, id, salary)
         self.department = department
-        self.specialization = specialization
-        self.projects = projects if projects is not None else []
-        self.team = team if team is not None else []
+        self.projects = []
+        self.team = []
+        self.spezialization = spezializaion
+        self.sertifications = []
         self.technical_projects = technical_projects if technical_projects is not None else []
-
+    
     def manage_project(self, project_name):
-        self.projects.append(project_name)
-        return f"Технический менеджер {self.name} добавил проект '{project_name}' в отдел {self.department}"
-
+        return Manager.manage_project(self, project_name)
+    
     def perform_maintenance(self):
-        return f"{self.name} (TechManager) выполняет техническое обслуживание ({self.specialization})"
-
+        return Technician.perform_maintenance(self)
+    
     def assign_task(self, employee, task):
-        task.assign(employee)
-        return f"Задача '{task.title}' назначена сотруднику {employee.name} менеджером {self.name}"
-
-    def calculate_salary(self):
-        return self.salary * 1.35  # комбинированная надбавка
-
-
-class Task:
-    def __init__(self, title, description):
-        self.title = title
-        self.description = description
-        self.assigned_to = None
-        self.status = "Создана"  # Создана / Назначена / В работе / Выполнена
-
-    def assign(self, employee):
-        self.assigned_to = employee
-        self.status = "Назначена"
-
-    def start(self):
-        if self.assigned_to is not None:
-            self.status = "В работе"
-
-    def complete(self):
-        self.status = "Выполнена"
-
-    def __str__(self):
-        assigned = self.assigned_to.name if self.assigned_to else "Не назначена"
-        return f"Задача: {self.title} | Описание: {self.description} | Выполнитель: {assigned} | Статус: {self.status}"
-
-
-class EmployeeRegistry:
-    def __init__(self):
-        self.employees = {}
-
+        if employee in self.team:
+            return f"TechManager {self.name}, назначил задачу '{task.title}' сотруднику {employee.name}"
+        return f"{employee.name} не в команде"
+    
     def add_employee(self, employee):
-        self.employees[employee.id] = employee
+        return Manager.add_to_team(self, employee)
+    
+    def get_team_info(self):
+        return Manager.get_team_info(self)
+    
+    def calculate_salary(self):
+        manager_salary = Manager.calculate_salary(self) 
+        tech_salary = Technician.calculate_salary(self)
+        return (manager_salary + tech_salary) / 2
+    
+    def get_info(self):
+        return f"TechManager: {self.name}, ID: {self.id}, Отдел: {self.department}, Специализация: {self.spezialization}"
+        
+def main():
+    print("=== Система управления сотрудниками ===")
 
-    def remove_employee(self, employee_id):
-        return self.employees.pop(employee_id, None)
+    # Создание менеджера
+    manager_name = input("Введите имя менеджера: ")
+    department = input("Введите отдел: ")
+    manager = Manager(manager_name, 1, 1000, department)
 
-    def get_employee(self, employee_id):
-        return self.employees.get(employee_id)
+    while True:
+        print("\nМеню:")
+        print("1 - Добавить сотрудника")
+        print("2 - Добавить проект")
+        print("3 - Показать команду")
+        print("4 - Показать зарплаты")
+        print("0 - Выход")
 
-    def get_all_employees(self):
-        return list(self.employees.values())
+        choice = input("Выберите действие: ")
 
-    def get_employees_by_role(self, role_name):
-        return [emp for emp in self.employees.values() if emp.__class__.__name__ == role_name]
+        if choice == "1":
+            emp_name = input("Имя сотрудника: ")
+            emp_salary = int(input("Зарплата сотрудника: "))
+            employee = Employee(emp_name, len(manager.team) + 2, emp_salary)
+            print(manager.add_to_team(employee))
+
+        elif choice == "2":
+            project = input("Название проекта: ")
+            print(manager.manage_project(project))
+
+        elif choice == "3":
+            print("Команда менеджера:")
+            print(manager.get_team_info())
+
+        elif choice == "4":
+            print("Зарплаты:")
+            print(f"{manager.name} (Manager): {manager.calculate_salary()}")
+            for emp in manager.team:
+                print(f"{emp.name} (Employee): {emp.calculate_salary()}")
+
+        elif choice == "0":
+            print("Выход из программы")
+            break
+
+        else:
+            print("Неверный ввод")
 
 
 if __name__ == "__main__":
-    # Примеры использования (демонстрация)
-    registry = EmployeeRegistry()
-
-    emp1 = Employee("Иван", 1, 50000)
-    emp2 = Employee("Мария", 2, 52000)
-
-    manager = Manager("Анна", 3, 70000, "IT")
-    tech = Technician("Сергей", 4, 60000, "Сети")
-    tech_mgr = TechManager("Ольга", 5, 90000, "Разработка", "Backend")
-
-    registry.add_employee(emp1)
-    registry.add_employee(emp2)
-    registry.add_employee(manager)
-    registry.add_employee(tech)
-    registry.add_employee(tech_mgr)
-
-    print(manager.add_to_team(emp1))
-    print(manager.add_to_team(emp2))
-    print("Команда менеджера Анна:")
-    print(manager.get_team_info())
-    print()
-
-    print(manager.manage_project("CRM система"))
-    print(tech.perform_maintenance())
-    print(tech.add_certification("Cisco CCNA"))
-    print()
-
-    task = Task("Настройка сервера", "Установить и настроить Nginx")
-    print(tech_mgr.assign_task(tech, task))
-    print(task)
-    task.start()
-    print("После старта:", task)
-    task.complete()
-    print("После завершения:", task)
-    print()
-
-    # Полиморфизм: разные calculate_salary для разных ролей
-    print("--- Зарплаты ---")
-    for emp in registry.get_all_employees():
-        print(f"{emp.name} ({emp.get_role()}): {emp.calculate_salary()}")
+    main()
 
         
     
