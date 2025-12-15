@@ -72,14 +72,9 @@ class Technician(Employee):
 
 
 class TechManager(Manager, Technician):
-    def __init__(self, name, id, salary, department, spezializaion, technical_projects=None):
-        # Вызываем инициализацию Employee
-        super().__init__(name, id, salary)
-        self.department = department
-        self.projects = []
-        self.team = []
-        self.spezialization = spezializaion
-        self.sertifications = []
+    def __init__(self, name, emp_id, salary, department, specialization, technical_projects=None):
+        Manager.__init__(self, name, id, salary, department)
+        Technician.__init__(self, name, id, salary, specialization)
         self.technical_projects = technical_projects if technical_projects is not None else []
     
     def manage_project(self, project_name):
@@ -108,7 +103,7 @@ class TechManager(Manager, Technician):
         return f"TechManager: {self.name}, ID: {self.id}, Отдел: {self.department}, Специализация: {self.spezialization}"
         
 def main():
-    print("=== Система управления сотрудниками ===")
+    print("Система управления сотрудниками")
 
     # Создание менеджера
     manager_name = input("Введите имя менеджера: ")
