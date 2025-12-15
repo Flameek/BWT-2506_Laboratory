@@ -1,5 +1,10 @@
 # Python
 __pycache__/
+*.pyc
+*.pyo
+*.tmp
+*.log
+*.swp
 *.py[cod]
 *.so
 *.egg
